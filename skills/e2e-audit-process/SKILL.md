@@ -130,7 +130,14 @@ This is the master process skill. It orchestrates the other audit skills in the 
 - [ ] Run Aderyn / custom static analysis
 - [ ] **Do NOT trust automated tools as final answer** — they miss business logic
 
-### 3.2 Pattern-Based Review
+### 3.2 Vector-Based Triage
+**Use skill: `attack-vector-db`**
+- [ ] Load the attack vector database (75+ vectors with FP conditions)
+- [ ] Classify each vector: SKIP / BORDERLINE / SURVIVE
+- [ ] Promote borderline vectors only if you can name the specific function + exploit
+- [ ] Deep-dive surviving vectors using domain-specific skills below
+
+### 3.3 Pattern-Based Review
 Walk through each vulnerability domain systematically:
 
 **Use skills (check each):**
@@ -185,8 +192,15 @@ Walk through each vulnerability domain systematically:
 - [ ] Quantify the impact (how much money at risk? who's affected?)
 - [ ] Verify the PoC works against the actual codebase (not a simplified version)
 
-### 4.2 Severity Classification
-**Use skill: `audit-report-format`**
+### 4.2 Finding Validation & Severity Classification
+**Use skills: `finding-validation`, `audit-report-format`**
+
+Every finding MUST pass the FP gate before inclusion:
+1. Concrete attack path (caller → call → state change → loss)
+2. Reachable entry point (check all modifiers and access control)
+3. No existing guard prevents the attack
+
+Then assign confidence score (starts at 100, apply deductions) and severity.
 
 | Severity | Impact | Likelihood | Examples |
 |----------|--------|------------|----------|

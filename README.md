@@ -49,7 +49,7 @@ Tell your agent: *"I need to audit [contract]. Use the e2e-audit-process skill."
 
 ## What's Inside
 
-### 🎯 Audit Process & Methodology (8 skills)
+### 🎯 Audit Process & Methodology (10 skills)
 | Skill | Purpose |
 |---|---|
 | `e2e-audit-process` | **Master orchestrator** — end-to-end audit from scoping to delivery |
@@ -60,6 +60,8 @@ Tell your agent: *"I need to audit [contract]. Use the e2e-audit-process skill."
 | `spec-miner` | Extract invariants from docs, comments, and tests |
 | `spec-to-code-compliance` | Verify code matches specification |
 | `differential-review` | Security-focused diff review for PRs and upgrades |
+| `finding-validation` | **NEW** — 3-check FP gate + confidence scoring + severity classification |
+| `attack-vector-db` | **NEW** — 200 machine-formatted vectors with built-in FP conditions |
 
 ### 🔴 Vulnerability Domains (22 skills)
 | Skill | Focus |
@@ -143,6 +145,60 @@ Deep knowledge of major protocols — architecture, accounting, integration gotc
 | `second-opinion` | Challenge and validate findings |
 | `verification-before-completion` | Pre-delivery quality gate |
 | `p2p-network-audit` | Network-layer security analysis |
+
+---
+
+## Finding Validation Framework (NEW)
+
+Every finding passes a structured gauntlet before it enters a report:
+
+```
+FP Gate (3 checks — ALL must pass):
+  1. Concrete attack path (caller → call → state change → loss)
+  2. Reachable entry point (check modifiers, access control)
+  3. No existing guard (check requires, reentrancy locks, etc.)
+
+Confidence Score (starts at 100, deductions applied):
+  -25  Privileged caller required
+  -20  Partial attack path
+  -15  Self-contained impact
+  -10  Specific token behavior required
+  -10  External protocol state required
+   -5  Requires front-running
+
+Report Threshold:
+  90-100  Must include PoC
+  80-89   Include PoC and fix
+  75-79   Include fix
+  60-74   Description only
+  <60     Drop entirely
+```
+
+## Attack Vector Database (NEW)
+
+200 machine-formatted vectors across 17 categories, each with built-in false-positive conditions:
+
+- **[SIG]** Signature & Authentication (8 vectors)
+- **[TOK]** Token Standards & Interactions (11 vectors)
+- **[NFT]** ERC721 & ERC1155 (19 vectors)
+- **[VAULT]** ERC4626 Vaults (11 vectors)
+- **[ACL]** Access Control (7 vectors)
+- **[REEN]** Reentrancy (7 vectors)
+- **[ORC]** Oracle & Price Manipulation (12 vectors)
+- **[ECON]** Flash Loan & Economic (7 vectors)
+- **[PROX]** Proxy & Upgrade (18 vectors)
+- **[MATH]** Math & Precision (9 vectors)
+- **[CALL]** Calldata & ABI (12 vectors)
+- **[XCHAIN]** Cross-Chain & LayerZero (20 vectors)
+- **[GOV]** Governance & Voting (4 vectors)
+- **[DOS]** DoS & Griefing (8 vectors)
+- **[TIME]** Time & Ordering (6 vectors)
+- **[ASM]** Assembly & EVM (9 vectors)
+- **[DEPLOY]** Deployment & Configuration (11 vectors)
+- **[AA]** Account Abstraction / ERC-4337 (5 vectors)
+- **[MISC]** Miscellaneous (16 vectors)
+
+Each vector: description + FP conditions + category tag. Triage workflow: classify → borderline check → deep pass on survivors.
 
 ---
 
