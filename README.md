@@ -2,7 +2,7 @@
 
 **An OpenClaw starter pack for smart contract security auditors.**
 
-79 skills. Zero fluff. Everything you need to turn Claude into a security-pilled audit partner.
+84 skills. Zero fluff. Everything you need to turn Claude into a security-pilled audit partner.
 
 Built by auditors, for auditors. Emphasis on:
 - **End-to-end audit processes** — from scoping to report delivery
@@ -49,10 +49,13 @@ Tell your agent: *"I need to audit [contract]. Use the e2e-audit-process skill."
 
 ## What's Inside
 
-### 🎯 Audit Process & Methodology (10 skills)
+### 🎯 Audit Process & Methodology (13 skills)
 | Skill | Purpose |
 |---|---|
 | `e2e-audit-process` | **Master orchestrator** — end-to-end audit from scoping to delivery |
+| `nemesis-orchestrator` | **NEW** — Iterative Feynman + State Inconsistency feedback loop until convergence |
+| `feynman-auditor` | **NEW** — First-principles questioning (7 categories, 28+ questions per function) |
+| `state-inconsistency-auditor` | **NEW** — Coupled state desync detector (mutation matrix, parallel path comparison) |
 | `audit-context-building` | Ultra-granular line-by-line code analysis for deep context |
 | `audit-prep-assistant` | Pre-audit checklist (Trail of Bits methodology) |
 | `audit-report-format` | Professional report formatting (severity matrix, PoC structure) |
@@ -60,8 +63,8 @@ Tell your agent: *"I need to audit [contract]. Use the e2e-audit-process skill."
 | `spec-miner` | Extract invariants from docs, comments, and tests |
 | `spec-to-code-compliance` | Verify code matches specification |
 | `differential-review` | Security-focused diff review for PRs and upgrades |
-| `finding-validation` | **NEW** — 3-check FP gate + confidence scoring + severity classification |
-| `attack-vector-db` | **NEW** — 200 machine-formatted vectors with built-in FP conditions |
+| `finding-validation` | 3-check FP gate + confidence scoring + severity classification |
+| `attack-vector-db` | 200 machine-formatted vectors with built-in FP conditions |
 
 ### 🔴 Vulnerability Domains (22 skills)
 | Skill | Focus |
@@ -202,6 +205,52 @@ Each vector: description + FP conditions + category tag. Triage workflow: classi
 
 ---
 
+## Nemesis: The Iterative Deep-Logic Auditor (NEW)
+
+Three new skills adapted from [nemesis-auditor](https://github.com/0xiehnnkta/nemesis-auditor) that find bugs pattern-matching misses:
+
+### Feynman Auditor (`feynman-auditor`)
+Questions every line of code using 7 systematic categories:
+```
+Category 1: Purpose    — WHY is this line here? What breaks if deleted?
+Category 2: Ordering   — What if this line moves up/down? State gap window?
+Category 3: Consistency — WHY does funcA have this guard but funcB doesn't?
+Category 4: Assumptions — What is implicitly trusted about caller/data/state/time?
+Category 5: Boundaries  — First call, last call, double call, self-reference?
+Category 6: Return/Error — Ignored returns, silent failures, fallthrough paths?
+Category 7: Call Reorder — Swap external call before/after state update?
+            + Multi-Tx   — Same function, different values, across time?
+```
+
+### State Inconsistency Auditor (`state-inconsistency-auditor`)
+Maps every coupled state pair and finds where one side updates without the other:
+```
+Phase 1: Map coupled pairs (balance↔checkpoint, shares↔index, debt↔accumulator)
+Phase 2: Build Mutation Matrix (every function × every state variable)
+Phase 3: Cross-check every mutation for missing coupled updates
+Phase 4: Check operation ordering within functions
+Phase 5: Compare parallel paths (transfer vs burn, withdraw vs liquidate)
+Phase 6: Trace multi-step user journeys for stale state accumulation
+Phase 7: Flag masking code hiding broken invariants (ternary clamps, min caps)
+Phase 8: Verification gate (eliminate false positives)
+```
+
+### Nemesis Orchestrator (`nemesis-orchestrator`)
+Runs both in an iterative feedback loop:
+```
+Pass 1 (Feynman) → suspects + assumptions + Function-State Matrix
+    ↓ feed forward
+Pass 2 (State) → gaps + new coupled pairs + masking code  
+    ↓ feed back
+Pass 3 (Feynman, targeted) → root cause analysis on gaps
+    ↓ feed back
+Pass 4 (State, targeted) → propagate root causes to other pairs
+    ↓ ...continue until convergence (max 6 passes)
+```
+The cross-feed finds bugs that neither methodology catches alone.
+
+---
+
 ## The Calldata Attack Emphasis
 
 Most audit checklists treat calldata as an afterthought. We don't.
@@ -228,7 +277,7 @@ The `e2e-audit-process` skill defines a 6-phase methodology:
 Phase 0: Scope & Setup     → Understand the engagement
 Phase 1: Context Building   → Read before you hunt
 Phase 2: Attack Surface     → Map where bugs could live
-Phase 3: Vulnerability Hunt → Find bugs systematically
+Phase 3: Vulnerability Hunt → Find bugs (patterns + Feynman + state desync)
 Phase 4: Exploit & Validate → Prove they're real
 Phase 5: Property Testing   → Prove the absence of bug classes
 Phase 6: Report & Delivery  → Communicate clearly
@@ -257,6 +306,7 @@ Built with [OpenClaw](https://docs.openclaw.ai). Skills sourced from:
 - Competitive audit findings (Code4rena, Sherlock, Cantina)
 - Real-world exploit forensics
 - Original research on calldata attack patterns and EVM execution security
+- [nemesis-auditor](https://github.com/0xiehnnkta/nemesis-auditor) by 0xiehnnkta (Feynman + State Inconsistency methodology)
 
 ---
 

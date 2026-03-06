@@ -153,9 +153,33 @@ Walk through each vulnerability domain systematically:
 - [ ] `silent-failure-hunter` — Unchecked calls, swallowed reverts
 - [ ] `constant-time-analysis` — Timing side channels (if applicable)
 
-### 3.3 Business Logic Review
+### 3.3 Business Logic Review (First-Principles)
 **This is where most critical bugs hide.**
 
+**Use skill: `feynman-auditor`** (deep logic bugs via first-principles questioning)
+- [ ] Run attacker mindset recon (Q0.1-Q0.4) — build hit list before reading code
+- [ ] Build Function-State Matrix (all entry points × state reads/writes)
+- [ ] Apply 7 Feynman Question Categories to every function in priority order:
+  - Purpose (WHY is this here?), Ordering (what if moved?), Consistency (why A but not B?)
+  - Assumptions (what's implicitly trusted?), Boundaries (first/last/double call)
+  - Return/Error paths, External Call Reordering + Multi-Tx State Corruption
+- [ ] Cross-function analysis: guard consistency, inverse operation parity, value flow
+- [ ] Verify all C/H/M findings via code trace or PoC before including
+
+### 3.4 State Inconsistency Review (Coupled State)
+**Use skill: `state-inconsistency-auditor`** (coupled state desync bugs)
+- [ ] Map all coupled state pairs (balance↔checkpoint, shares↔index, debt↔accumulator)
+- [ ] Build Mutation Matrix: every function × every state variable × updates coupled state?
+- [ ] Cross-check: does every mutation path update ALL coupled dependencies?
+- [ ] Compare parallel paths: transfer vs burn, withdraw vs liquidate — same coupled updates?
+- [ ] Trace multi-step user journeys: deposit → partial withdraw → claim rewards
+- [ ] Flag masking code: ternary clamps, min caps, try/catch hiding broken invariants
+- [ ] Verify all C/H/M findings before including
+
+**NOTE:** For maximum coverage on complex/novel codebases, use `nemesis-orchestrator`
+which runs Feynman and State Inconsistency in an iterative feedback loop until convergence.
+
+### 3.5 Spec Compliance Review
 **Use skill: `spec-to-code-compliance`**
 - [ ] For each invariant from Phase 1.3, verify the code enforces it
 - [ ] For each state transition, verify all preconditions are checked
@@ -164,7 +188,7 @@ Walk through each vulnerability domain systematically:
 - [ ] Walk through the "unhappy paths" — what happens when things fail?
 - [ ] Check edge cases: zero amounts, max values, empty arrays, self-referencing
 
-### 3.4 Calldata-Specific Deep Dive
+### 3.6 Calldata-Specific Deep Dive
 - [ ] Test every external function with malformed calldata
 - [ ] Test with short calldata (missing params)
 - [ ] Test with extra trailing calldata
@@ -173,7 +197,7 @@ Walk through each vulnerability domain systematically:
 - [ ] If proxy: test selector collisions, extra calldata propagation
 - [ ] If cross-chain: test message replay, encoding ambiguity
 
-### 3.5 Differential Review (If Upgrade/Fork)
+### 3.7 Differential Review (If Upgrade/Fork)
 **Use skill: `differential-review`**
 - [ ] Diff against the base code (OpenZeppelin, Solmate, original protocol)
 - [ ] Every modification is a potential vulnerability
@@ -291,6 +315,9 @@ Low Likeli.   MEDIUM         LOW              INFO
 |---|---|
 | Starting an audit | `e2e-audit-process` (this), `audit-context-building` |
 | Mapping entry points | `entry-point-analyzer` |
+| Deep logic bug hunting | `feynman-auditor` (first-principles questioning) |
+| Coupled state desync bugs | `state-inconsistency-auditor` (mutation matrix, parallel paths) |
+| Maximum-depth combined audit | `nemesis-orchestrator` (iterative Feynman + State loop) |
 | Hunting reentrancy | `reentrancy-audit`, `evm-execution-security` |
 | Reviewing DeFi logic | `defi-attack-taxonomy`, protocol-specific expert skill |
 | Checking oracles | `oracle-manipulation-audit` |
